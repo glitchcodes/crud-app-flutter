@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "503688612523",
+    "project_id": "scp-app-7f75c",
+    "storage_bucket": "scp-app-7f75c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:503688612523:android:4c30b956fc010fd4aec5ee",
+        "android_client_info": {
+          "package_name": "com.example.crud_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4CURyupwwnqiglazrSyEInxddSwvxVNI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
