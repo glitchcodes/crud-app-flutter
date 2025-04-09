@@ -23,7 +23,13 @@ class SCPApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: appTitle,
-      theme: ThemeData(primarySwatch: Colors.red),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: Color(0xff350f0f),
+            brightness: Brightness.dark
+        ),
+        scaffoldBackgroundColor: Color(0xff350f0f)
+      ),
       home: MainApp(),
     );
   }
