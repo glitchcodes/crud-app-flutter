@@ -143,7 +143,7 @@ class _DatabaseScreenState extends State<DatabaseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('SCP Database'),
+        title: const Text('Database'),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
