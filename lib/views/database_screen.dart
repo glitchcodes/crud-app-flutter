@@ -1,6 +1,8 @@
 import 'package:crud_app/services/firebase_service.dart';
 import 'package:flutter/material.dart';
 
+import 'package:crud_app/widgets/typography/text_heading.dart';
+
 class DatabaseScreen extends StatefulWidget {
   const DatabaseScreen({super.key});
 
@@ -143,7 +145,13 @@ class _DatabaseScreenState extends State<DatabaseScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Database'),
+        title: TextHeading(
+          text: 'The Directory',
+          style: TextStyle(
+              fontSize: 24
+          ),
+          fontName: 'Grenze Gotisch',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
