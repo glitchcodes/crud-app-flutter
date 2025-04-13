@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:crud_app/firebase_options.dart';
 
+final GlobalKey<ScaffoldState> globalScaffoldKey = GlobalKey();
+
 void main() async {
   // Ensure that the Flutter engine is initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,6 +62,7 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: globalScaffoldKey,
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
@@ -68,11 +71,11 @@ class _MainAppState extends State<MainApp> {
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
               icon: Icon(Icons.home),
-              label: 'Home'
+              label: 'Hub'
           ),
           BottomNavigationBarItem(
               icon: Icon(Icons.dns),
-              label: 'Database'
+              label: 'Directory'
           ),
           BottomNavigationBarItem(
               icon: Icon(Icons.person),
