@@ -1,5 +1,5 @@
+import 'package:crud_app/screens/home_screen.dart';
 import 'package:crud_app/views/database_screen.dart';
-import 'package:crud_app/navigation/home_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:crud_app/firebase_options.dart';
@@ -54,7 +54,7 @@ class _MainAppState extends State<MainApp> {
   }
 
   static const List<Widget> _pages = <Widget>[
-    HomeNavigator(),
+    HomeScreen(),
     DatabaseScreen(),
   ];
 
