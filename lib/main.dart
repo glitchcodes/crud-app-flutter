@@ -1,5 +1,5 @@
 import 'package:crud_app/views/database_screen.dart';
-import 'package:crud_app/views/home_screen.dart';
+import 'package:crud_app/navigation/home_navigator.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:crud_app/firebase_options.dart';
@@ -54,9 +54,8 @@ class _MainAppState extends State<MainApp> {
   }
 
   static const List<Widget> _pages = <Widget>[
-    HomeScreen(),
+    HomeNavigator(),
     DatabaseScreen(),
-    HomeScreen(),
   ];
 
   @override
@@ -67,23 +66,21 @@ class _MainAppState extends State<MainApp> {
         index: _selectedIndex,
         children: _pages,
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Hub'
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.dns),
-              label: 'Directory'
-          ),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.person),
-              label: 'Profile'
-          )
-        ],
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+      bottomNavigationBar: NavigationBar(
+          selectedIndex: _selectedIndex,
+          onDestinationSelected: _onItemTapped,
+          destinations: const <NavigationDestination> [
+            NavigationDestination(
+              selectedIcon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined),
+              label: 'Hub',
+            ),
+            NavigationDestination(
+              selectedIcon: Icon(Icons.dns),
+              icon: Icon(Icons.dns_outlined),
+              label: 'Directory',
+            ),
+          ]
       ),
     );
   }
