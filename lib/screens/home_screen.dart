@@ -1,29 +1,47 @@
-import 'package:crud_app/navigation/home_navigator.dart';
-import 'package:crud_app/widgets/drawer/home_drawer.dart';
-import 'package:crud_app/widgets/object_class_categories.dart';
-import 'package:crud_app/widgets/recent_scp_list.dart';
 import 'package:crud_app/widgets/typography/text_heading.dart';
 import 'package:flutter/material.dart';
 
+import 'package:crud_app/widgets/drawer/home_drawer.dart';
+import 'package:go_router/go_router.dart';
+
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Widget child;
+
+  const HomeScreen({super.key, required this.child});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-  String _currentRoute = '/home';
+  int _selectedDrawerIndex = 0;
 
-  void _navigateTo(String route) {
-    if (_currentRoute == route) return;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Sync drawer selection when route changes
+    final location = GoRouterState.of(context).uri.path;
+    final newIndex = HomeDrawer.getSelectedIndex(location);
+    if (_selectedDrawerIndex != newIndex) {
+      setState(() => _selectedDrawerIndex = newIndex);
+    }
+  }
 
-    _navigatorKey.currentState!.pushReplacementNamed(route);
-
+  void _handleDrawerItemSelected(int index) {
     setState(() {
-      _currentRoute = route;
+      _selectedDrawerIndex = index;
     });
+
+    switch (index) {
+      case 0:
+        context.go('/hub');
+        break;
+      case 1:
+        context.go('/hub/guide');
+        break;
+      default:
+        context.go('/hub');
+    }
   }
 
   @override
@@ -47,10 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: HomeDrawer(
-        currentRoute: _currentRoute,
-        onDestinationSelected: _navigateTo
+        selectedDrawerIndex: _selectedDrawerIndex,
+        onItemSelected: _handleDrawerItemSelected,
       ),
-      body: HomeNavigator(navigatorKey: _navigatorKey)
+      body: widget.child
     );
   }
 }
