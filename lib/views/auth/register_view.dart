@@ -55,7 +55,7 @@ class _RegisterViewState extends State<RegisterView> {
           ),
           SizedBox(height: 40),
           TextHeading(
-            text: 'Register',
+            text: 'Sign Up',
             style: TextStyle(
                 fontSize: 20
             ),
@@ -207,7 +207,7 @@ class _RegisterFormState extends State<RegisterForm> {
                 height: 16,
                 child: CircularProgressIndicator(color: Colors.white),
               ) :
-              Text('Register'),
+              Text('Sign Up'),
             ),
           ),
           SizedBox(height: 16),

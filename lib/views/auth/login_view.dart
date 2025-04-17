@@ -55,7 +55,7 @@ class _LoginViewState extends State<LoginView> {
           ),
           SizedBox(height: 40),
           TextHeading(
-            text: 'Login',
+            text: 'Sign In',
             style: TextStyle(
                 fontSize: 20
             ),
@@ -198,7 +198,7 @@ class _LoginFormState extends State<LoginForm> {
                 height: 16,
                 child: CircularProgressIndicator(color: Colors.white),
               ) :
-              Text('Login'),
+              Text('Sign In'),
             ),
           ),
           SizedBox(height: 16),
