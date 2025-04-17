@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class MainScaffold extends StatelessWidget {
+class MainLayout extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainScaffold({super.key, required this.navigationShell});
+  const MainLayout({super.key, required this.navigationShell});
 
   void _onDestinationSelected(BuildContext context, int index) {
     navigationShell.goBranch(
