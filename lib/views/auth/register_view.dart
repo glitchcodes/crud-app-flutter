@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:crud_app/widgets/typography/text_heading.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -10,9 +12,45 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
-
   @override
   Widget build(BuildContext context) {
+
+    void what() {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Chicken Jockey!'),
+              content: Image(
+                  image: AssetImage('assets/images/what.gif')
+              ),
+            );
+          }
+      );
+    }
+
+    Widget whatNow() {
+      final random = Random();
+      final randomInt = random.nextInt(11);
+
+      if (randomInt == 7) {
+        return GestureDetector(
+          onTap: () => what(),
+          child: Image.asset(
+            'assets/images/what.webp',
+            width: 60,
+            height: 60,
+          ),
+        );
+      }
+
+      return Image.asset(
+        'assets/images/scp-logo.png',
+        width: 60,
+        height: 60,
+      );
+    }
+
     return Container(
       padding: EdgeInsets.all(16),
       child: Column(
@@ -46,11 +84,7 @@ class _RegisterViewState extends State<RegisterView> {
                 )
               ),
               Spacer(),
-              Image.asset(
-                'assets/images/scp-logo.png',
-                width: 60,
-                height: 60,
-              )
+              whatNow(),
             ],
           ),
           SizedBox(height: 40),
