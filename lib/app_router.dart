@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:crud_app/ui/layouts/main_layout.dart';
 import 'package:crud_app/ui/layouts/auth_layout.dart';
-import 'package:crud_app/screens/home_screen.dart';
-import 'package:crud_app/screens/database_screen.dart';
+import 'package:crud_app/ui/screens/home_screen.dart';
+import 'package:crud_app/ui/screens/database_screen.dart';
 import 'package:crud_app/views/home/home_view.dart';
 
 import 'package:crud_app/views/home/guide_view.dart';
