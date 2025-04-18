@@ -1,6 +1,7 @@
 import 'dart:math';
 
-import 'package:crud_app/widgets/typography/text_heading.dart';
+import 'package:crud_app/ui/typography/text_heading.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

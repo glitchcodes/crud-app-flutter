@@ -1,7 +1,7 @@
-import 'package:crud_app/widgets/typography/text_heading.dart';
+import 'package:crud_app/ui/typography/text_heading.dart';
 import 'package:flutter/material.dart';
 
-import 'package:crud_app/widgets/drawer/home_drawer.dart';
+import 'package:crud_app/ui/drawer/home_drawer.dart';
 import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {

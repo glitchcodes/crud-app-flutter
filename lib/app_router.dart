@@ -3,8 +3,8 @@ import 'package:crud_app/views/auth/login_view.dart';
 import 'package:crud_app/views/auth/register_view.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:crud_app/widgets/layouts/main_layout.dart';
-import 'package:crud_app/widgets/layouts/auth_layout.dart';
+import 'package:crud_app/ui/layouts/main_layout.dart';
+import 'package:crud_app/ui/layouts/auth_layout.dart';
 import 'package:crud_app/screens/home_screen.dart';
 import 'package:crud_app/screens/database_screen.dart';
 import 'package:crud_app/views/home/home_view.dart';

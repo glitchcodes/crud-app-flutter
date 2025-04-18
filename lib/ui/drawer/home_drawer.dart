@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:crud_app/widgets/typography/text_heading.dart';
+import 'package:crud_app/ui/typography/text_heading.dart';
 
 class HomeDrawer extends StatelessWidget {
   final int selectedDrawerIndex;
