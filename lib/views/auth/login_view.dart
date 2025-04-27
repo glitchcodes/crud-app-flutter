@@ -1,5 +1,9 @@
+import 'package:crud_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:crud_app/features/auth/presentation/bloc/auth_event.dart';
+import 'package:crud_app/features/auth/presentation/bloc/auth_state.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginView extends StatefulWidget {
@@ -19,6 +23,7 @@ class _LoginViewState extends State<LoginView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Expanded(
                 child: Column(
@@ -28,7 +33,7 @@ class _LoginViewState extends State<LoginView> {
                       child: TextHeading(
                         text: 'SCP Foundation',
                         style: TextStyle(
-                            fontSize: 16
+                            fontSize: 14
                         ),
                       ),
                     ),
@@ -37,7 +42,7 @@ class _LoginViewState extends State<LoginView> {
                       child: TextHeading(
                         text: 'The Directory',
                         style: TextStyle(
-                            fontSize: 30
+                            fontSize: 24
                         ),
                         fontName: 'Grenze Gotisch',
                       ),
@@ -87,7 +92,6 @@ class _LoginFormState extends State<LoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
-  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -99,117 +103,123 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logging in...'))
-      );
-
-      // Dummy
-      await Future.delayed(Duration(seconds: 2));
-
-      setState(() {
-        _isSubmitting = false;
-      });
+      context.read<AuthBloc>().add(LoginEvent(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim()
+      ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: <Widget>[
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'johndoe@gmail.com',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.mail),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 20),
-          TextFormField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.lock),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 16),
-          Row(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is Authenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Redirecting...'))
+          );
+        }
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message))
+          );
+        }
+      },
+      builder: (context, state) {
+        return Form(
+          key: _formKey,
+          child: Column(
             children: <Widget>[
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'johndoe@gmail.com',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.mail),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'This field is required';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 16),
+              Row(
+                  children: <Widget>[
+                    SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: Checkbox(
+                          value: _rememberMe,
+                          onChanged: (value) {
+                            setState(() {
+                              _rememberMe = value!;
+                            });
+                          },
+                        )
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(left: 8),
+                      child: Text('Remember Me'),
+                    ),
+                    Spacer(),
+                    TextButton(
+                      onPressed: () {
+                        // Add forgot password functionality
+                      },
+                      child: Text('Forgot Password?'),
+                    ),
+                  ]
+              ),
+              SizedBox(height: 24),
               SizedBox(
-                height: 24,
-                width: 24,
-                child: Checkbox(
-                  value: _rememberMe,
-                  onChanged: (value) {
-                    setState(() {
-                      _rememberMe = value!;
-                    });
-                  },
-                )
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: state is AuthLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: state is AuthLoading ?
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ) :
+                  Text('Sign In'),
+                ),
               ),
-              Padding(
-                padding: EdgeInsets.only(left: 8),
-                child: Text('Remember Me'),
-              ),
-              Spacer(),
+              SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Add forgot password functionality
+                  context.go('/register');
                 },
-                child: Text('Forgot Password?'),
+                child: Text("Don't have an account? Sign Up"),
               ),
-            ]
-          ),
-          SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submitForm,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: _isSubmitting ?
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(color: Colors.white),
-              ) :
-              Text('Sign In'),
-            ),
-          ),
-          SizedBox(height: 16),
-          TextButton(
-            onPressed: () {
-              context.go('/register');
-            },
-            child: Text("Don't have an account? Sign Up"),
-          ),
-        ],
-      )
+            ],
+          )
+        );
+      }
     );
   }
 }

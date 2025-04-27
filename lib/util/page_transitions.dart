@@ -8,7 +8,7 @@ CustomTransitionPage slideFromRight({
   required Widget child
 }) {
   return CustomTransitionPage(
-    key: ValueKey(state.uri.path),
+    key: state.pageKey,
     child: Material(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: child
@@ -19,13 +19,13 @@ CustomTransitionPage slideFromRight({
       var curve = Curves.easeInOut;
 
       return SlideTransition(
-          position: Tween(begin: begin, end: end).animate(
-            CurvedAnimation(parent: animation, curve: curve),
-          ),
-          child: FadeTransition(
-              opacity: animation,
-              child: child
-          )
+        position: Tween(begin: begin, end: end).animate(
+          CurvedAnimation(parent: animation, curve: curve),
+        ),
+        child: FadeTransition(
+          opacity: animation,
+          child: child
+        )
       );
     },
     transitionDuration: Duration(milliseconds: 300),

@@ -39,6 +39,15 @@ class _HomeScreenState extends State<HomeScreen> {
       case 1:
         context.go('/hub/guide');
         break;
+      case 2:
+        context.go('/hub/contribute');
+        break;
+      case 3:
+        context.go('/hub/faq');
+        break;
+      case 4:
+        context.go('/hub/universe-hub');
+        break;
       default:
         context.go('/hub');
     }

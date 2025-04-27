@@ -17,7 +17,7 @@ class HomeDrawer extends StatelessWidget {
     '/hub/guide': 1,
     '/hub/contribute': 2,
     '/hub/faq': 3,
-    '/hub/universe': 4
+    '/hub/universe-hub': 4
   };
 
   static int getSelectedIndex(String route) {

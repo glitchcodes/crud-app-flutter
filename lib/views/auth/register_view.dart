@@ -1,9 +1,13 @@
 import 'dart:math';
 
+import 'package:crud_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:crud_app/features/auth/presentation/bloc/auth_event.dart';
+import 'package:crud_app/features/auth/presentation/bloc/auth_state.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -67,7 +71,7 @@ class _RegisterViewState extends State<RegisterView> {
                       child: TextHeading(
                         text: 'SCP Foundation',
                         style: TextStyle(
-                            fontSize: 16
+                            fontSize: 14
                         ),
                       ),
                     ),
@@ -76,7 +80,7 @@ class _RegisterViewState extends State<RegisterView> {
                       child: TextHeading(
                         text: 'The Directory',
                         style: TextStyle(
-                            fontSize: 30
+                            fontSize: 24
                         ),
                         fontName: 'Grenze Gotisch',
                       ),
@@ -119,13 +123,12 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
-  bool _rememberMe = false;
-  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -137,123 +140,134 @@ class _RegisterFormState extends State<RegisterForm> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Logging in...'))
-      );
-
-      // Dummy
-      await Future.delayed(Duration(seconds: 2));
-
-      setState(() {
-        _isSubmitting = false;
-      });
+      context.read<AuthBloc>().add(RegisterEvent(
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        confirmPassword: _confirmPasswordController.text.trim()
+      ));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: <Widget>[
-          TextFormField(
-            controller: _nameController,
-            decoration: InputDecoration(
-              labelText: 'Full Name',
-              hintText: 'John Doe',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.person),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 20),
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(
-              labelText: 'Email',
-              hintText: 'johndoe@gmail.com',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.mail),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 20),
-          TextFormField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.lock),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 20),
-          TextFormField(
-            controller: _confirmPasswordController,
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: 'Confirm Password',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              prefixIcon: Icon(Icons.lock),
-              border: OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'This field is required';
-              }
-              return null;
-            },
-          ),
-          SizedBox(height: 30),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submitForm,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message))
+          );
+        }
+      },
+      builder: (context, state) {
+        return Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  hintText: 'John Doe',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your name';
+                  }
+                  return null;
+                },
               ),
-              child: _isSubmitting ?
+              SizedBox(height: 20),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'johndoe@gmail.com',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.mail),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'This field is required';
+                  }
+                  if (value.length <= 6) {
+                    return 'Password must be at least 6 characters long';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 20),
+              TextFormField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Confirm Password',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'This field is required';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'Passwords do not match';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 30),
               SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(color: Colors.white),
-              ) :
-              Text('Sign Up'),
-            ),
-          ),
-          SizedBox(height: 16),
-          TextButton(
-            onPressed: () {
-              context.go('/login');
-            },
-            child: Text("Already have an account? Sign In"),
-          ),
-        ],
-      )
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: state is AuthLoading ? null : _submitForm,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: state is AuthLoading ?
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ) :
+                  Text('Sign Up'),
+                ),
+              ),
+              SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  context.go('/login');
+                },
+                child: Text("Already have an account? Sign In"),
+              ),
+            ],
+          )
+        );
+      },
     );
+
+
   }
 }

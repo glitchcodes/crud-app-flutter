@@ -1,9 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirebaseService {
+  final CollectionReference seriesCollection = FirebaseFirestore.instance
+      .collection('scp_series');
   final CollectionReference scpCollection = FirebaseFirestore.instance
       .collection('scp_items');
 
+  /// SCP Series
+  /// -------------------------------------------------------------------------
+  Stream<QuerySnapshot> getAllSeries() {
+    try {
+      final seriesStream = scpCollection.orderBy('name').snapshots();
+      return seriesStream;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// SCP Items
+  /// -------------------------------------------------------------------------
   Stream<QuerySnapshot> getSCPItems() {
     try {
       final scpStream = scpCollection.orderBy('itemNumber').snapshots();

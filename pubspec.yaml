@@ -41,6 +41,8 @@ dependencies:
   cloud_firestore: ^5.6.6
   google_fonts:
   go_router:
+  firebase_auth: ^5.5.2
+  flutter_bloc: ^9.1.0
 
 dev_dependencies:
   flutter_test:
