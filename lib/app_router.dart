@@ -1,20 +1,23 @@
 import 'dart:async';
 
 import 'package:crud_app/features/auth/presentation/bloc/auth_state.dart';
-import 'package:crud_app/ui/screens/splash_screen.dart';
 import 'package:crud_app/util/page_transitions.dart';
 import 'package:crud_app/views/auth/login_view.dart';
 import 'package:crud_app/views/auth/register_view.dart';
+import 'package:crud_app/views/directory/item_view.dart';
+import 'package:crud_app/views/directory/records_view.dart';
+import 'package:crud_app/views/directory/series_view.dart';
 import 'package:crud_app/views/home/contribute_view.dart';
 import 'package:crud_app/views/home/faq_view.dart';
 import 'package:crud_app/views/home/universe_hub_view.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 
 import 'package:crud_app/ui/layouts/main_layout.dart';
 import 'package:crud_app/ui/layouts/auth_layout.dart';
+import 'package:crud_app/ui/screens/splash_screen.dart';
 import 'package:crud_app/ui/screens/home_screen.dart';
-import 'package:crud_app/ui/screens/database_screen.dart';
+import 'package:crud_app/ui/screens/directory_screen.dart';
 import 'package:crud_app/views/home/home_view.dart';
 
 import 'package:crud_app/views/home/guide_view.dart';
@@ -123,9 +126,33 @@ class AppRouter {
           ),
           StatefulShellBranch(
               routes: [
-                GoRoute(
-                  path: '/directory',
-                  builder: (context, state) => const DatabaseScreen(),
+                ShellRoute(
+                  builder: (context, state, child) {
+                    return DirectoryScreen(child: child);
+                  },
+                  routes: [
+                    GoRoute(
+                      path: '/directory',
+                      builder: (context, state) => const SeriesView(),
+                      routes: [
+                        GoRoute(
+                          path: '/:seriesId',
+                          builder: (context, state) {
+                            final seriesId = state.pathParameters['seriesId'];
+                            return RecordsView(seriesId: seriesId!);
+                          },
+                          routes: [
+                            GoRoute(
+                              path: '/:itemId',
+                              builder: (context, state) {
+                                final itemId = state.pathParameters['itemId'];
+                                return ItemView(itemId: itemId!);
+                              })
+                          ]
+                        )
+                      ]
+                    )
+                  ]
                 )
               ]
           )

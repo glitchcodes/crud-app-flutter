@@ -10,8 +10,17 @@ class FirebaseService {
   /// -------------------------------------------------------------------------
   Stream<QuerySnapshot> getAllSeries() {
     try {
-      final seriesStream = scpCollection.orderBy('name').snapshots();
-      return seriesStream;
+      return seriesCollection.orderBy('name').snapshots();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<QuerySnapshot> getSeriesRecords(String seriesId) {
+    try {
+      return scpCollection.where('seriesId', isEqualTo: seriesId)
+          .orderBy('title')
+          .snapshots();
     } catch (e) {
       rethrow;
     }
