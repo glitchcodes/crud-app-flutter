@@ -1,52 +1,227 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UniverseHubView extends StatelessWidget {
   const UniverseHubView({super.key});
 
+  Future<void> _launchUrl(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri)) {
+      throw Exception('Could not launch $url');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            HighlightedText("Welcome to the SCP Foundation, researcher."),
-            const SizedBox(height: 16),
-            const Text(
-              "It has likely been a difficult journey to find yourself where you are today, having to be scouted out by people you've never met before and invited to exams and interviews for a position you were never fully told of. We can imagine you already have a few questions, whether it be where you are, who is here with you, or why you were chosen to be here. Many of these questions we will not be able to answer. Some of those, we will.",
+    return Center( // Center the content horizontally
+      child: SingleChildScrollView(
+        child: SizedBox( // Constrain the width
+          width: 600, // You can adjust this value as needed
+          child: Container(
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black, width: 2.0),
+              color: Colors.white,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              "In the interest of not making new personnel go through their first several weeks guessing what each task force, site, and acronym actually stands for, we have compiled all the information you'd reasonably need (and can be given) into a single automated message, sent to every new recruit's personal inbox. We recommend going over these at your earliest convenience.",
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  color: Colors.red,
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Text(
+                        'TERMINAL SESSION ID: [ERROR/OUT_OF_BOUND]',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'FROM: [AUTOMATED MESSAGE]',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'TO: Junior Researcher █████████',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(
+                  color: Colors.black,
+                  thickness: 2.0,
+                  height: 2.0,
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Welcome, New Recruit.',
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'This hub provides essential information to understand the SCP Foundation and its universe. Familiarize yourself with the following:',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontSize: 16, color: Colors.black),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Core Concepts:',
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildIndentedText('- Mission: Learn about the Foundation\'s goals: to Secure, Contain, and Protect.'),
+                      _buildIndentedText('- Object Classes: Understand the classification system for anomalies (e.g., Safe, Euclid, Keter).'),
+                      _buildIndentedText('- Security Clearance Levels: Know your access privileges within the Foundation.'),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Organizational Structure:',
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildIndentedText('- Facilities and Departments: Explore the various locations and divisions within the Foundation.'),
+                      _buildIndentedText('- Mobile Task Forces (MTFs): Discover the specialized teams for handling specific threats.'),
+                      _buildIndentedText('- Personnel Dossiers: Get familiar with key personnel within the Foundation.'),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Beyond the Basics:',
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildLinkTileWithIndent(
+                        title: 'Groups of Interest (GoIs)',
+                        url: 'https://scp-wiki.wikidot.com/groups-of-interest',
+                        description: 'Learn about allied, neutral, and antagonistic organizations.',
+                        indentation: 16.0,
+                      ),
+                      _buildLinkTileWithIndent(
+                        title: 'Locations of Interest (LoIs)',
+                        url: 'https://scp-wiki.wikidot.com/log-of-anomalous-locations',
+                        description: 'Discover significant anomalous locations.',
+                        indentation: 16.0,
+                      ),
+                      _buildLinkTileWithIndent(
+                        title: 'K-Class "End of the World" Scenarios',
+                        url: 'https://scp-wiki.wikidot.com/k-class-scenarios',
+                        description: 'Understand potential existential threats.',
+                        indentation: 16.0,
+                      ),
+                      _buildIndentedText('- Glossary of Terms: Familiarize yourself with common SCP Foundation terminology.'),
+                      const SizedBox(height: 24),
+                      Text(
+                        'For Junior Researchers:',
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Padding(
+                        padding: EdgeInsets.only(left: 16.0),
+                        child: Text(
+                          'Further resources and guidelines for new researchers can be found on the SCP Wiki.',
+                          textAlign: TextAlign.left,
+                          style: TextStyle(fontSize: 16, color: Colors.black),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      const Text(
+                        'Welcome to the Foundation.',
+                        textAlign: TextAlign.left,
+                        style: TextStyle(fontStyle: FontStyle.italic, fontSize: 18, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            HighlightedText("Contents:"),
-            const SizedBox(height: 8),
-            BulletPoint(text: "About the SCP Foundation, our mission statement, a word from the Administrator, and other miscellaneous information."),
-            BulletPoint(text: "Object Classes, a rundown of the anomaly classification system. Required reading for new researchers."),
-            BulletPoint(text: "Security Clearance Levels. Violation is grounds for instant contract termination and amnesticization."),
-            BulletPoint(text: "Foundation Facilities, explanations of your Site or Area designation."),
-            BulletPoint(text: "Foundation Departments, subdivisions focusing on different research aspects."),
-            BulletPoint(text: "Mobile Task Forces, specialized containment teams for different anomaly types."),
-            BulletPoint(text: "The Personnel Dossier, a list of superiors, coworkers, and notable individuals (mostly redacted)."),
-            BulletPoint(text: "Groups of Interest, organizations aware of the anomalous."),
-            BulletPoint(text: "Locations of Interest, anomalous locations requiring diplomatic containment."),
-            BulletPoint(text: "K-Class 'End of the World' Scenarios."),
-            const SizedBox(height: 16),
-            HighlightedText("Additional Resources for Junior Researchers:"),
-            const SizedBox(height: 8),
-            BulletPoint(text: "The Log of Anomalous Items — objects that don't currently warrant an SCP designation."),
-            BulletPoint(text: "The Log of Extranormal Events — unusual events too sudden for proper Foundation intervention."),
-            BulletPoint(text: "The Log of Unexplained Locations — locations needing only basic concealment."),
-            const SizedBox(height: 16),
-            HighlightedSentence(
-              "If you have any more questions, ask your assigned senior researcher. Classified information may limit responses.",
-            ),
-            const SizedBox(height: 16),
-            HighlightedText("Welcome again, recruit, and good luck."),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildIndentedText(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 16.0, bottom: 8.0),
+      child: Text(
+        text,
+        textAlign: TextAlign.left,
+        style: const TextStyle(fontSize: 16, color: Colors.black),
+      ),
+    );
+  }
+
+  Widget _buildLinkTileWithIndent({
+    required String title,
+    required String url,
+    required String description,
+    double indentation = 0.0,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(left: indentation, bottom: 12.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          GestureDetector(
+            onTap: () => _launchUrl(url),
+            child: Text(
+              title,
+              textAlign: TextAlign.left,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.blue,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            textAlign: TextAlign.left,
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+          ),
+        ],
       ),
     );
   }
