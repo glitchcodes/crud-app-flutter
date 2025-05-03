@@ -52,10 +52,12 @@ class FirebaseService {
     return scpCollection.add({
       'itemNumber': scpItem['itemNumber'],
       'title': scpItem['title'],
+      'brief_description': scpItem['brief_description'],
       'description': scpItem['description'],
       'objectClass': scpItem['objectClass'],
       'containmentProcedures': scpItem['containmentProcedures'],
       'imageUrl': scpItem['imageUrl'],
+      'seriesId': scpItem['seriesId'],
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
