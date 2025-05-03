@@ -85,8 +85,21 @@ class _ItemViewState extends State<ItemView> with RouteAware {
       ) : Padding(
         padding: EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Container(
+                width: 200,
+                height: 200,
+                color: Colors.grey[200],
+                child: (itemData!['imageUrl'] != null)
+                    ? Image.network(itemData!['imageUrl'], fit: BoxFit.cover)
+                    : const Icon(Icons.person, size: 50, color: Colors.grey
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
             TextHeading(
               text: 'SCP-${itemData!['itemNumber']}',
               style: TextStyle(

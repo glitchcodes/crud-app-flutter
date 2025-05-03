@@ -1,13 +1,17 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:crud_app/features/directory/presentation/bloc/directory_bloc.dart';
 import 'package:crud_app/features/directory/presentation/bloc/directory_event.dart';
 import 'package:crud_app/services/firebase_service.dart';
+import 'package:crud_app/services/r2_service.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ContributeInfoView extends StatefulWidget {
   final String? itemId;
@@ -27,6 +31,10 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
   late Map<String, dynamic> itemData;
   bool isEditing = false;
   bool isLoading = false;
+  bool isUploading = false;
+
+  File? _imageFile;
+  String? _imageUrl;
 
   final titleController = TextEditingController();
   final itemNumberController = TextEditingController();
@@ -77,6 +85,8 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
         itemData = snapshot.data() as Map<String, dynamic>;
         isLoading = false;
 
+        _imageUrl = itemData['imageUrl'];
+
         titleController.text = itemData['title'];
         itemNumberController.text = itemData['itemNumber'];
         objectClassController.text = itemData['objectClass'];
@@ -113,7 +123,7 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
     return seriesMap[value ~/ 1000] ?? 'XPFQvH80Hl5rVOqBVD1k';
   }
 
-  void _handleSaveOrUpdate(context, docId) async {
+  void _handleSaveOrUpdate(BuildContext context, docId) async {
     final title = titleController.text.trim();
     final itemNumber = itemNumberController.text.trim();
     final objectClass = objectClassController.text.trim();
@@ -128,7 +138,8 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
       'brief_description': briefDescription,
       'description': jsonEncode(description),
       'containmentProcedures': jsonEncode(containmentProcedure),
-      'seriesId': determineSeriesId(itemNumber)
+      'seriesId': determineSeriesId(itemNumber),
+      'imageUrl': _imageUrl,
     };
 
     if (isEditing) {
@@ -137,6 +148,8 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('SCP item updated successfully')),
           );
+
+          context.go('/directory/${itemData['seriesId']}/${widget.itemId}');
         });
     } else {
       _firebaseService.addSCPItem(scpItem)
@@ -146,7 +159,86 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
           );
         });
     }
+  }
 
+  Future<void> _handleDelete() async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Delete SCP'),
+        content: Text('Are you sure you want to delete this SCP?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel')
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _firebaseService.deleteSCPItem(widget.itemId!);
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('SCP item deleted successfully'))
+              );
+
+              Navigator.pop(context);
+
+              context.go('/directory');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red[300]
+            ),
+            child: Text('Delete')
+          )
+        ],
+      )
+    );
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final selectedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (selectedImage != null) {
+      setState(() {
+        _imageFile = File(selectedImage.path);
+      });
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_imageFile == null) return;
+
+    setState(() {
+      isUploading = true;
+    });
+
+    try {
+      final fileExtension = _imageFile!.path.split('.').last;
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+
+      final r2 = R2Service(bucketName: 'scp-app');
+      r2.initialize();
+
+      final url = await r2.uploadFile(_imageFile!, fileName);
+
+      if (url != null) {
+        setState(() {
+          _imageUrl = url;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Image uploaded successfully')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error uploading image')),
+      );
+    } finally {
+      setState(() {
+        isUploading = false;
+      });
+    }
   }
 
   @override
@@ -159,66 +251,140 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
       ) : Container(
         padding: EdgeInsets.all(16),
         child: Column(
-          // crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextHeading(
-              text: isEditing ? 'Edit SCP' : 'Add SCP',
-              style: TextStyle(
-                fontSize: 30
-              ),
-              fontName: 'Grenze Gotisch',
+            Row(
+              children: [
+                TextHeading(
+                  text: isEditing ? 'Edit SCP' : 'Add SCP',
+                  style: TextStyle(
+                      fontSize: 30
+                  ),
+                  fontName: 'Grenze Gotisch',
+                ),
+                Spacer(),
+                ElevatedButton.icon(
+                  onPressed: () => _handleSaveOrUpdate(context, widget.itemId),
+                  icon: Icon(Icons.save),
+                  label: Text(isEditing ? 'Update' : 'Add')
+                )
+              ],
             ),
             SizedBox(height: 40),
             Form(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextFormField(
-                    controller: titleController,
-                    decoration: InputDecoration(
-                      labelText: 'Title',
-                      hintText: 'e.g Nervous Tick',
-                      border: OutlineInputBorder(),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
-                    ),
+                  TextHeading(
+                      text: 'General Information'
                   ),
-                  SizedBox(height: 24),
+                  SizedBox(height: 10),
 
-                  SizedBox(
-                    width: double.infinity,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 20
+                    ),
+                    decoration: BoxDecoration(
+                        color: Color(0xFF231919),
+                        borderRadius: BorderRadius.circular(8)
+                    ),
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: TextFormField(
-                            controller: itemNumberController,
-                            decoration: InputDecoration(
-                              labelText: 'Item #',
-                              hintText: 'e.g 00001',
-                              border: OutlineInputBorder(),
-                              floatingLabelBehavior: FloatingLabelBehavior.always,
-                            ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(6),
+                                child: Container(
+                                  width: 80,
+                                  height: 80,
+                                  color: Colors.grey[200],
+                                  child: _imageFile != null
+                                      ? Image.file(_imageFile!, fit: BoxFit.cover)
+                                      : (_imageUrl != null
+                                        ? Image.network(_imageUrl!, fit: BoxFit.cover)
+                                        : const Icon(Icons.person, size: 50, color: Colors.grey)
+                                  ),
+                                ),
+                              ),
+                              // CircleAvatar(
+                              //   radius: 40,
+                              //   backgroundImage: _imageFile != null
+                              //       ? FileImage(_imageFile!)
+                              //       : (_imageUrl != null ? NetworkImage(_imageUrl!) : null),
+                              //   child: _imageFile == null && _imageUrl == null
+                              //       ? Icon(Icons.person, size: 50)
+                              //       : null,
+                              // ),
+                              Spacer(),
+                              ElevatedButton(
+                                onPressed: _pickImage,
+                                child: Text('Select Image'),
+                              ),
+                              SizedBox(width: 10),
+                              ElevatedButton(
+                                onPressed: _imageFile != null ? _uploadImage : null,
+                                child: isUploading
+                                    ? CircularProgressIndicator(color: Colors.white)
+                                    : Text('Upload'),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(width: 10),
-                        DropdownMenu(
-                          controller: objectClassController,
-                          initialSelection: list.first,
-                          dropdownMenuEntries: objectClassEntries,
-                          label: Text('Object Class'),
-                        )
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 24),
 
-                  TextFormField(
-                    controller: briefDescriptionController,
-                    decoration: InputDecoration(
-                      labelText: 'Brief Description',
-                      hintText: 'e.g This is nervous tick',
-                      border: OutlineInputBorder(),
-                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                        SizedBox(height: 30),
+
+                        TextFormField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            labelText: 'Title',
+                            hintText: 'e.g Nervous Tick',
+                            border: OutlineInputBorder(),
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                          ),
+                        ),
+                        SizedBox(height: 24),
+
+                        SizedBox(
+                          width: double.infinity,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: itemNumberController,
+                                  decoration: InputDecoration(
+                                    labelText: 'Item #',
+                                    hintText: 'e.g 00001',
+                                    border: OutlineInputBorder(),
+                                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: 10),
+                              DropdownMenu(
+                                controller: objectClassController,
+                                initialSelection: list.first,
+                                dropdownMenuEntries: objectClassEntries,
+                                label: Text('Object Class'),
+                              )
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 24),
+
+                        TextFormField(
+                          controller: briefDescriptionController,
+                          decoration: InputDecoration(
+                            labelText: 'Brief Description',
+                            hintText: 'e.g This is nervous tick',
+                            border: OutlineInputBorder(),
+                            floatingLabelBehavior: FloatingLabelBehavior.always,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   SizedBox(height: 20),
@@ -276,12 +442,38 @@ class _ContributeInfoViewState extends State<ContributeInfoView> {
 
                   SizedBox(height: 30),
 
-                  Align(
-                    alignment: Alignment.center,
-                    child: ElevatedButton(
-                        onPressed: () => _handleSaveOrUpdate(context, widget.itemId),
-                        child: Text(isEditing ? 'Update' : 'Add')
+                  TextHeading(
+                      text: 'Actions'
+                  ),
+  
+                  SizedBox(height: 10),
+  
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                        color: Color(0xFF231919),
+                        borderRadius: BorderRadius.circular(8)
                     ),
+                    child: Row(
+                      children: [
+                        ElevatedButton.icon(
+                            onPressed: () => _handleSaveOrUpdate(context, widget.itemId),
+                            icon: Icon(Icons.save),
+                            label: Text(isEditing ? 'Update' : 'Add')
+                        ),
+                        SizedBox(width: 10),
+                        isEditing ? ElevatedButton.icon(
+                          onPressed: _handleDelete,
+                          icon: Icon(Icons.delete),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red[300]
+                          ),
+                          label: Text('Delete')
+                        ) : Container(),
+                        Spacer()
+                      ],
+                    )
                   )
                 ]
               )

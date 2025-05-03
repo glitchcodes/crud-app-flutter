@@ -7,11 +7,11 @@ import 'package:crud_app/features/auth/domain/usecases/logout_user.dart';
 import 'package:crud_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:crud_app/features/auth/presentation/bloc/auth_event.dart';
 import 'package:crud_app/features/directory/presentation/bloc/directory_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:crud_app/firebase_options.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'app_router.dart';
 
@@ -20,6 +20,9 @@ final GlobalKey<ScaffoldState> globalScaffoldKey = GlobalKey();
 void main() async {
   // Ensure that the Flutter engine is initialized before running the app
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load .env
+  await dotenv.load(fileName: '.env');
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   // await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
