@@ -28,9 +28,8 @@ class _ItemViewState extends State<ItemView> with RouteAware {
   Map<String, dynamic>? itemData;
   bool isLoading = true;
 
-  void _updateAppBarTitle(String title) {
-    context.read<DirectoryBloc>().add(UpdateAppBarTitle(title: title));
-  }
+  FleatherController descriptionController = FleatherController();
+  FleatherController containmentProceduresController = FleatherController();
 
   @override
   void initState() {
@@ -56,6 +55,13 @@ class _ItemViewState extends State<ItemView> with RouteAware {
 
       setState(() {
         itemData = snapshot.data() as Map<String, dynamic>;
+        descriptionController = FleatherController(
+          document: _parseDescription()
+        );
+        containmentProceduresController = FleatherController(
+          document: _parseContainmentProcedures()
+        );
+
         isLoading = false;
       });
     } catch (e) {
@@ -110,8 +116,10 @@ class _ItemViewState extends State<ItemView> with RouteAware {
                     text: 'Description'
                   ),
                   SizedBox(height: 16),
-                  RichText(
-                    text: TextSpan(text: _parseDescription().toPlainText())
+                  FleatherEditor(
+                    controller: descriptionController,
+                    readOnly: true,
+                    showCursor: false,
                   )
                 ],
               ),
@@ -131,10 +139,10 @@ class _ItemViewState extends State<ItemView> with RouteAware {
                     text: 'Containment Procedures'
                   ),
                   SizedBox(height: 16),
-                  RichText(
-                    text: TextSpan(
-                      text: _parseContainmentProcedures().toPlainText()
-                    )
+                  FleatherEditor(
+                    controller: containmentProceduresController,
+                    readOnly: true,
+                    showCursor: false,
                   )
                 ],
               ),
