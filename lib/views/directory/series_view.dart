@@ -1,7 +1,10 @@
+import 'package:crud_app/features/directory/presentation/bloc/directory_bloc.dart';
+import 'package:crud_app/features/directory/presentation/bloc/directory_event.dart';
 import 'package:crud_app/services/firebase_service.dart';
 import 'package:crud_app/ui/search_scp.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 class SeriesView extends StatefulWidget {
@@ -15,7 +18,14 @@ class _SeriesViewState extends State<SeriesView> {
   final FirebaseService _firebaseService = FirebaseService();
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    context.read<DirectoryBloc>().add(UpdateAppBarTitle(title: 'The Directory'));
+
     return SingleChildScrollView(
       child: Column(
         children: [

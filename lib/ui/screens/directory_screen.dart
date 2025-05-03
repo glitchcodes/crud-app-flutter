@@ -1,9 +1,14 @@
+import 'package:crud_app/features/directory/presentation/bloc/directory_state.dart';
 import 'package:crud_app/services/firebase_service.dart';
 import 'package:crud_app/ui/drawer/directory_drawer.dart';
+import 'package:crud_app/util/route_utils.dart';
 import 'package:flutter/material.dart';
 
 import 'package:crud_app/ui/typography/text_heading.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/directory/presentation/bloc/directory_bloc.dart';
 
 
 class DirectoryScreen extends StatefulWidget {
@@ -18,6 +23,9 @@ class DirectoryScreen extends StatefulWidget {
 class _DirectoryScreenState extends State<DirectoryScreen> {
   int _selectedDrawerIndex = 0;
 
+  bool isViewingItem = false;
+  Map<String, String>? currentRouteParams;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -28,6 +36,11 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     if (_selectedDrawerIndex != newIndex) {
       setState(() => _selectedDrawerIndex = newIndex);
     }
+
+    setState(() {
+      isViewingItem = RouteUtils.isSeriesItemRoute(context);
+      currentRouteParams = isViewingItem ? RouteUtils.getCurrentParams(context) : null;
+    });
   }
 
   void _handleDrawerItemSelected(int index) {
@@ -46,21 +59,42 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: TextHeading(
-          text: 'The Directory',
-          style: TextStyle(
-              fontSize: 24
+    return BlocBuilder<DirectoryBloc, DirectoryState>(
+      builder: (context, state) {
+        return Scaffold(
+          appBar: AppBar(
+            title: TextHeading(
+              text: state.appBarTitle,
+              style: TextStyle(
+                  fontSize: 24
+              ),
+              fontName: 'Grenze Gotisch',
+            ),
+            leading: GoRouterState.of(context).uri.path == '/directory' ? null : Builder(
+              builder: (BuildContext context) {
+                return IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    context.pop();
+                  },
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                );
+              }
+            ),
+            actions: [
+              if (isViewingItem && currentRouteParams != null) IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () => context.go('/directory/contribute/${currentRouteParams?['itemId']}'),
+              ),
+            ],
           ),
-          fontName: 'Grenze Gotisch',
-        ),
-      ),
-      drawer: DirectoryDrawer(
-        selectedDrawerIndex: _selectedDrawerIndex,
-        onItemSelected: _handleDrawerItemSelected
-      ),
-      body: widget.child
+          drawer: DirectoryDrawer(
+              selectedDrawerIndex: _selectedDrawerIndex,
+              onItemSelected: _handleDrawerItemSelected
+          ),
+          body: widget.child
+        );
+      }
     );
   }
 

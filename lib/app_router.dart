@@ -7,6 +7,7 @@ import 'package:crud_app/views/auth/register_view.dart';
 import 'package:crud_app/views/directory/item_view.dart';
 import 'package:crud_app/views/directory/records_view.dart';
 import 'package:crud_app/views/directory/series_view.dart';
+import 'package:crud_app/views/directory/contribute_info_view.dart';
 import 'package:crud_app/views/home/contribute_view.dart';
 import 'package:crud_app/views/home/faq_view.dart';
 import 'package:crud_app/views/home/universe_hub_view.dart';
@@ -135,6 +136,19 @@ class AppRouter {
                       path: '/directory',
                       builder: (context, state) => const SeriesView(),
                       routes: [
+                        GoRoute( // Add Records
+                          name: 'add_scp',
+                          path: '/contribute',
+                          builder: (context, state) => const ContributeInfoView()
+                        ),
+                        GoRoute( // Edit Records
+                          name: 'edit_scp',
+                          path: '/contribute/:itemId',
+                          builder: (context, state) {
+                            final itemId = state.pathParameters['itemId'];
+                            return ContributeInfoView(itemId: itemId);
+                          },
+                        ),
                         GoRoute(
                           path: '/:seriesId',
                           builder: (context, state) {
@@ -143,6 +157,7 @@ class AppRouter {
                           },
                           routes: [
                             GoRoute(
+                              name: 'view_scp',
                               path: '/:itemId',
                               builder: (context, state) {
                                 final itemId = state.pathParameters['itemId'];

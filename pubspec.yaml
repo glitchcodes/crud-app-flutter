@@ -43,6 +43,7 @@ dependencies:
   go_router:
   firebase_auth: ^5.5.2
   flutter_bloc: ^9.1.0
+  fleather: ^1.22.0
 
 dev_dependencies:
   flutter_test:

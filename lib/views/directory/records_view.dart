@@ -1,9 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crud_app/features/directory/presentation/bloc/directory_bloc.dart';
 import 'package:crud_app/services/firebase_service.dart';
 import 'package:crud_app/ui/search_scp.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../features/directory/presentation/bloc/directory_event.dart';
 
 class RecordsView extends StatefulWidget {
   final String seriesId;
@@ -77,6 +81,8 @@ class _RecordsViewState extends State<RecordsView> {
 
   @override
   Widget build(BuildContext context) {
+    context.read<DirectoryBloc>().add(UpdateAppBarTitle(title: seriesName));
+
     return SingleChildScrollView(
       child: Column(
         children: [

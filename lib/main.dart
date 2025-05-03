@@ -6,6 +6,7 @@ import 'package:crud_app/features/auth/domain/usecases/get_current_user.dart';
 import 'package:crud_app/features/auth/domain/usecases/logout_user.dart';
 import 'package:crud_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:crud_app/features/auth/presentation/bloc/auth_event.dart';
+import 'package:crud_app/features/directory/presentation/bloc/directory_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -46,41 +47,52 @@ void main() async {
     )
   );
 
+  final directoryBloc = DirectoryBloc();
+
   // Check auth on startup
   authBloc.add(CheckAuthStatusEvent());
 
-  runApp(SCPApp(authBloc: authBloc));
+  runApp(SCPApp(authBloc: authBloc, directoryBloc: directoryBloc));
 }
 
 class SCPApp extends StatelessWidget {
   final AuthBloc authBloc;
+  final DirectoryBloc directoryBloc;
 
   // Constructor to accept the database instance
-  const SCPApp({super.key, required this.authBloc});
+  SCPApp({super.key, required this.authBloc, required this.directoryBloc});
 
   static const appTitle = 'SCP Database';
 
+  late final _router = AppRouter(authBloc: authBloc).router;
+
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => authBloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (context) => authBloc),
+        BlocProvider(create: (context) => directoryBloc)
+      ],
       child: MaterialApp.router(
-      title: appTitle,
-      theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-              seedColor: Color(0xff350f0f),
-              brightness: Brightness.dark
-          ),
-          scaffoldBackgroundColor: Color(0xff350f0f),
-          elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF5B6057),
-                  foregroundColor: Colors.white
+          title: appTitle,
+          theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                  seedColor: Color(0xff350f0f),
+                  brightness: Brightness.dark
+              ),
+              scaffoldBackgroundColor: Color(0xff350f0f),
+              elevatedButtonTheme: ElevatedButtonThemeData(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF5B6057),
+                      foregroundColor: Colors.white
+                  )
               )
-          )
-      ),
-      routerConfig: AppRouter(authBloc: authBloc).router,
-      debugShowCheckedModeBanner: false
+          ),
+          routeInformationParser: _router.routeInformationParser,
+          routeInformationProvider: _router.routeInformationProvider,
+          routerDelegate: _router.routerDelegate,
+          debugShowCheckedModeBanner: false,
+
       )
     );
   }
