@@ -29,7 +29,7 @@ class _SeriesViewState extends State<SeriesView> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          SearchSCP(),
+          // SearchSCP(),
           SizedBox(height: 15),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),

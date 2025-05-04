@@ -28,9 +28,33 @@ class FirebaseService {
 
   /// SCP Items
   /// -------------------------------------------------------------------------
+
+  Stream<QuerySnapshot> searchSCPItems(String query) {
+    try {
+      final scpStream = scpCollection
+          .orderBy('title')
+          .where('title', isGreaterThanOrEqualTo: query)
+          .where('title', isLessThanOrEqualTo: '$query\uf8ff')
+          .snapshots();
+
+      return scpStream;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Stream<QuerySnapshot> getSCPItems() {
     try {
       final scpStream = scpCollection.orderBy('itemNumber').snapshots();
+      return scpStream;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<QuerySnapshot> getSCPItemsLimited() {
+    try {
+      final scpStream = scpCollection.orderBy('itemNumber').limit(10).snapshots();
       return scpStream;
     } catch (e) {
       rethrow;

@@ -6,6 +6,7 @@ import 'package:crud_app/views/auth/login_view.dart';
 import 'package:crud_app/views/auth/register_view.dart';
 import 'package:crud_app/views/directory/item_view.dart';
 import 'package:crud_app/views/directory/records_view.dart';
+import 'package:crud_app/views/directory/search_view.dart';
 import 'package:crud_app/views/directory/series_view.dart';
 import 'package:crud_app/views/directory/contribute_info_view.dart';
 import 'package:crud_app/views/home/contribute_view.dart';
@@ -136,6 +137,11 @@ class AppRouter {
                       path: '/directory',
                       builder: (context, state) => const SeriesView(),
                       routes: [
+                        GoRoute(
+                          name: 'search_scp',
+                          path: '/search',
+                          builder: (context, state) => const SearchView()
+                        ),
                         GoRoute( // Add Records
                           name: 'add_scp',
                           path: '/contribute',

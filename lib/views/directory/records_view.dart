@@ -86,7 +86,7 @@ class _RecordsViewState extends State<RecordsView> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          SearchSCP(),
+          // SearchSCP(),
           SizedBox(height: 15),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
