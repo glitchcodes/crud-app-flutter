@@ -132,6 +132,7 @@ class _RecordsViewState extends State<RecordsView> {
 
                     return GridView.builder(
                       shrinkWrap: true,
+                      physics: ScrollPhysics(),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: columns, // Number of columns
                         crossAxisSpacing: 10,   // Space between columns
