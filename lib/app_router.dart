@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:crud_app/features/auth/presentation/bloc/auth_state.dart';
+import 'package:crud_app/ui/screens/profile_screen.dart';
 import 'package:crud_app/util/page_transitions.dart';
 import 'package:crud_app/views/auth/login_view.dart';
 import 'package:crud_app/views/auth/register_view.dart';
@@ -12,6 +13,7 @@ import 'package:crud_app/views/directory/contribute_info_view.dart';
 import 'package:crud_app/views/home/contribute_view.dart';
 import 'package:crud_app/views/home/faq_view.dart';
 import 'package:crud_app/views/home/universe_hub_view.dart';
+import 'package:crud_app/views/profile/profile_view.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 
@@ -176,6 +178,21 @@ class AppRouter {
                   ]
                 )
               ]
+          ),
+          StatefulShellBranch(
+            routes: [
+              ShellRoute(
+                builder: (context, state, child) {
+                  return ProfileScreen(child: child);
+                },
+                routes: [
+                  GoRoute(
+                    path: '/profile',
+                    builder: (context, state) => const ProfileView(),
+                  )
+                ]
+              )
+            ]
           )
         ]
       )

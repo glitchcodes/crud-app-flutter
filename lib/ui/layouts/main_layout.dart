@@ -31,6 +31,11 @@ class MainLayout extends StatelessWidget {
             icon: Icon(Icons.dns_outlined),
             label: 'Directory',
           ),
+          NavigationDestination(
+            selectedIcon: Icon(Icons.person),
+            icon: Icon(Icons.person_outlined),
+            label: 'Profile',
+          ),
         ]
       ),
     );
