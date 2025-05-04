@@ -90,11 +90,11 @@ class _ItemViewState extends State<ItemView> with RouteAware {
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                width: 200,
+                width: double.infinity,
                 height: 200,
                 color: Colors.grey[200],
                 child: (itemData!['imageUrl'] != null)
-                    ? Image.network(itemData!['imageUrl'], fit: BoxFit.cover)
+                    ? Image.network(itemData!['imageUrl'])
                     : const Icon(Icons.person, size: 50, color: Colors.grey
                 ),
               ),
