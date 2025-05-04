@@ -19,7 +19,7 @@ class FirebaseService {
   Stream<QuerySnapshot> getSeriesRecords(String seriesId) {
     try {
       return scpCollection.where('seriesId', isEqualTo: seriesId)
-          .orderBy('title')
+          .orderBy('itemNumber')
           .snapshots();
     } catch (e) {
       rethrow;
