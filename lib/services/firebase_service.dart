@@ -18,7 +18,8 @@ class FirebaseService {
 
   Stream<QuerySnapshot> getSeriesRecords(String seriesId) {
     try {
-      return scpCollection.where('seriesId', isEqualTo: seriesId)
+      return scpCollection
+          .where('seriesId', isEqualTo: seriesId)
           .orderBy('itemNumber')
           .snapshots();
     } catch (e) {
@@ -31,11 +32,12 @@ class FirebaseService {
 
   Stream<QuerySnapshot> searchSCPItems(String query) {
     try {
-      final scpStream = scpCollection
-          .orderBy('title')
-          .where('title', isGreaterThanOrEqualTo: query)
-          .where('title', isLessThanOrEqualTo: '$query\uf8ff')
-          .snapshots();
+      final scpStream =
+          scpCollection
+              .orderBy('title')
+              .where('title', isGreaterThanOrEqualTo: query)
+              .where('title', isLessThanOrEqualTo: '$query\uf8ff')
+              .snapshots();
 
       return scpStream;
     } catch (e) {
@@ -54,7 +56,8 @@ class FirebaseService {
 
   Stream<QuerySnapshot> getSCPItemsLimited() {
     try {
-      final scpStream = scpCollection.orderBy('itemNumber').limit(10).snapshots();
+      final scpStream =
+          scpCollection.orderBy('itemNumber').limit(10).snapshots();
       return scpStream;
     } catch (e) {
       rethrow;
@@ -105,4 +108,67 @@ class FirebaseService {
   Future<void> deleteSCPItem(String itemId) async {
     return scpCollection.doc(itemId).delete();
   }
+
+  // +++++ Temporary User Profile Services +++++
+  Future updateUserName(String userId, String userName) async {
+    final result = await FirebaseFirestore.instance
+        .collection('profiles')
+        .doc(userId)
+        .update({'name': userName});
+
+    final newName = await FirebaseFirestore.instance
+        .collection('profiles')
+        .doc(userId)
+        .get()
+        .then((value) => value.data()?['name']);
+    return newName;
+  }
+
+  Future updateUserEmail(String userId, String email) async {
+    final result = await FirebaseFirestore.instance
+        .collection('profiles')
+        .doc(userId)
+        .update({'email': email});
+
+    final newEmail = await FirebaseFirestore.instance
+        .collection('profiles')
+        .doc(userId)
+        .get()
+        .then((value) => value.data()?['email']);
+    return newEmail;
+  }
+
+  Future<String?> getUserProfilePictureURL(String userId) async {
+    final doc =
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(userId)
+            .get();
+    return doc.data()?['profilePictureURL'] as String?;
+  }
+
+  Future<String> updateUserProfilePictureURL(
+    String userId,
+    String imageUrl,
+  ) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(userId)
+          .update({'profilePictureURL': imageUrl});
+      return 'Profile picture URL updated successfully';
+    } catch (e) {
+      print('Error updating profile picture URL: $e');
+      return 'Error updating profile picture URL';
+      // throw 'Failed to update profile picture URL';
+    }
+  }
+
+  Future<void> deleteUserProfilePictureURL(String userId) async {
+    return FirebaseFirestore.instance.collection('profiles').doc(userId).update(
+      {'profilePictureURL': null},
+    );
+  }
+
+  // ----- Temporary User Profile Services -----
 }
