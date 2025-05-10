@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseService {
   final CollectionReference seriesCollection = FirebaseFirestore.instance
@@ -110,32 +111,56 @@ class FirebaseService {
   }
 
   // +++++ Temporary User Profile Services +++++
-  Future updateUserName(String userId, String userName) async {
-    final result = await FirebaseFirestore.instance
-        .collection('profiles')
-        .doc(userId)
-        .update({'name': userName});
-
-    final newName = await FirebaseFirestore.instance
-        .collection('profiles')
-        .doc(userId)
-        .get()
-        .then((value) => value.data()?['name']);
-    return newName;
+  Future<void> reAuthenticateUser(String email, String password) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await currentUser.reauthenticateWithCredential(credential);
+    }
   }
 
-  Future updateUserEmail(String userId, String email) async {
-    final result = await FirebaseFirestore.instance
-        .collection('profiles')
-        .doc(userId)
-        .update({'email': email});
+  Future<void> updateUserName(String newUserName) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(currentUser.uid)
+          .update({'name': newUserName});
+    } else {
+      //redirect to login page or invalidate auth
+    }
+  }
 
-    final newEmail = await FirebaseFirestore.instance
-        .collection('profiles')
-        .doc(userId)
-        .get()
-        .then((value) => value.data()?['email']);
-    return newEmail;
+  Future updateUserEmail(String newEmail) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      // Update auth email
+      await currentUser.verifyBeforeUpdateEmail(newEmail);
+      // Update Firestore profile collection email
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(currentUser.uid)
+          .update({'email': newEmail});
+    } else {
+      //redirect to login page or invalidate auth
+    }
+  }
+
+  Future<void> updateUserPassword(String newPassword) async {
+    // ensure firebase auth email change + profiles collection update
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      await currentUser.updatePassword(newPassword);
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(currentUser.uid)
+          .update({'password': newPassword});
+    } else {
+      //redirect to login page
+    }
   }
 
   Future<String?> getUserProfilePictureURL(String userId) async {

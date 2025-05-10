@@ -1,17 +1,14 @@
-// profile_view
-
 import 'dart:io';
-
 import 'package:crud_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:crud_app/features/auth/presentation/bloc/auth_event.dart';
 import 'package:crud_app/services/firebase_service.dart';
 import 'package:crud_app/services/r2_service.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
+import 'package:crud_app/views/profile/reauth_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -37,8 +34,9 @@ class _ProfileViewState extends State<ProfileView> {
   String? newProfileImagePath;
   final nameController = TextEditingController();
   final emailController = TextEditingController();
-  final oldPasswordController = TextEditingController();
-  String? oldPasswordError;
+  // final oldPasswordController = TextEditingController();
+  // String? oldPasswordError;
+  String? emailError;
   String? newPasswordError;
   String? confirmPasswordError;
   final newPasswordController = TextEditingController();
@@ -48,33 +46,17 @@ class _ProfileViewState extends State<ProfileView> {
   void initState() {
     super.initState();
     _r2Service.initialize();
-    // enable new password only when old password is filled
-    oldPasswordController.addListener(() {
-      setState(() {
-        newPasswordController.text =
-            oldPasswordController.text.isNotEmpty
-                ? newPasswordController.text
-                : '';
-      });
-    });
-
-    // enable confirm new password only when new password is filled
     newPasswordController.addListener(() {
-      setState(() {
-        confirmNewPasswordController.text =
-            newPasswordController.text.isNotEmpty
-                ? confirmNewPasswordController.text
-                : '';
-      });
+      setState(() {});
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchUserData(); // Fetch user data after the widget is built
+    // Fetch user data after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _fetchUserData();
     });
   }
 
-  void _fetchUserData() async {
-    // TODO: get profile picture URL from Cloudflare R2 and set it to initialProfilePictureURL
+  Future<void> _fetchUserData() async {
     setState(() {
       isLoading = true; // Show loading indicator
     });
@@ -119,76 +101,63 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  Future<String?> _verifyPassword(String testPassword) async {
-    try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      AuthCredential credential = EmailAuthProvider.credential(
-        email: initialEmail!,
-        password: oldPasswordController.text,
-      );
-
-      await currentUser?.reauthenticateWithCredential(credential);
-      print('Reauthentication successful.');
-      return null; // Password is correct
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'wrong-password') {
-        return 'Incorrect password. Please try again.';
-      }
-      return e.message;
-    } catch (e) {
-      return 'An unexpected error occurred. Please try again.';
-    }
-  }
-
-  Future<String?> _updatePassword(String newPassword) async {
-    try {
-      await FirebaseAuth.instance.currentUser?.updatePassword(newPassword);
-      print('Password updated successfully.');
-      return null; // Password updated successfully
-    } on FirebaseAuthException catch (e) {
-      return 'Error updating password: ${e.message}';
-    } catch (e) {
-      return 'An unexpected error occurred. Please try again.';
-    }
-  }
-
   void _updateUserData() async {
     if (_formKey.currentState?.validate() != true) {
       return;
     }
 
-    try {
-      // Verify old password if provided
-      if (oldPasswordController.text.isNotEmpty) {
-        final passwordError = await _verifyPassword(oldPasswordController.text);
-        if (passwordError != null) {
-          setState(() {
-            oldPasswordError = passwordError;
-          });
-          return;
-        } else {
-          setState(() {
-            oldPasswordError = null;
-          });
+    final bool requireReauth =
+        newPasswordController.text.isNotEmpty ||
+        confirmNewPasswordController.text.isNotEmpty ||
+        emailController.text != initialEmail;
 
-          // Update password
-          final updatePasswordError = await _updatePassword(
-            newPasswordController.text,
-          );
-          if (updatePasswordError != null) {
+    try {
+      if (requireReauth) {
+        final bool reauthResult = await showReauthDialog(context);
+        if (!reauthResult) {
+          // if (mounted) {
+          //   showToast(context, 'Please reauthenticate to proceed');
+          // }
+          if (initialEmail != emailController.text) {
+            // Email changed, show error
             setState(() {
-              newPasswordError = updatePasswordError;
-            });
-            return;
-          } else {
-            setState(() {
-              newPasswordError = null;
+              emailError = 'Please save again to reauthenticate.';
             });
           }
+          return; // User did not reauthenticate
+        } else {
+          // Reauthentication successful
+          // update email and/or password
+          if (emailController.text != initialEmail) {
+            await _firebaseService.updateUserEmail(emailController.text);
+            print('Email updated.');
+            setState(() {
+              emailError = null;
+            });
+          }
+
+          if (newPasswordController.text.isNotEmpty) {
+            if (newPasswordController.text !=
+                confirmNewPasswordController.text) {
+              setState(() {
+                confirmPasswordError = 'Passwords do not match';
+              });
+              return;
+            } else {
+              await _firebaseService.updateUserPassword(
+                newPasswordController.text,
+              );
+              print('Password updated.');
+              setState(() {
+                confirmPasswordError = null;
+              });
+            }
+          }
+          print('Reauthentication successful. Implementing changes...');
         }
       }
 
-      // Update profile picture if changed
+      // Update profile picture URL
       if (newProfileImagePath != null &&
           File(newProfileImagePath!).existsSync()) {
         String fileExtension = newProfileImagePath!.split('.').last;
@@ -200,6 +169,7 @@ class _ProfileViewState extends State<ProfileView> {
           await _r2Service.deleteFile(slug);
         } catch (e) {
           print('Error deleting old profile picture: $e');
+          return;
         }
 
         try {
@@ -214,6 +184,8 @@ class _ProfileViewState extends State<ProfileView> {
             print('Profile picture uploaded: $uploadedFileURL');
             await _firebaseService.updateUserProfilePictureURL(
               userId!,
+
+              // get current user password
               uploadedFileURL,
             );
             print("Profile picture URL updated in database: $uploadedFileURL");
@@ -225,34 +197,22 @@ class _ProfileViewState extends State<ProfileView> {
         }
       }
 
-      bool needsReauthentication = false;
-      // Update name if changed
+      // Update name
       if (nameController.text != initialName) {
-        needsReauthentication = true;
-        print(
-          await _firebaseService.updateUserName(userId!, nameController.text),
-        );
-        // print('Name updated: ${nameController.text}');
+        await _firebaseService.updateUserName(nameController.text);
+        print('Name updated.');
       }
 
-      // Update email if changed
-      if (emailController.text != initialEmail) {
-        needsReauthentication = true;
-        print(
-          await _firebaseService.updateUserEmail(userId!, emailController.text),
-        );
-      }
-
-      if (needsReauthentication) {
-        // Reauthenticate the user after updating the email
-        // logout the user
+      // Only reload page when name and profile pic is updated but logout user when auth is required
+      if (requireReauth) {
+        // Logout user
         context.read<AuthBloc>().add(LogoutEvent());
+        print('User logged out.');
+      } else {
+        // Reload page
+        _resetForm();
+        // fetch data
       }
-
-      // Navigate only after all operations are complete
-      // Navigator.of(context).pushReplacement(
-      //   MaterialPageRoute(builder: (context) => const ProfileView()),
-      // );
     } catch (e) {
       print('Error updating user data: $e');
       ScaffoldMessenger.of(
@@ -261,12 +221,12 @@ class _ProfileViewState extends State<ProfileView> {
     }
   }
 
-  void _clearForm() {
+  void _resetForm() {
     setState(() {
       newProfileImagePath = null;
       nameController.text = initialName ?? '';
       emailController.text = initialEmail ?? '';
-      oldPasswordController.clear();
+      // oldPasswordController.clear();
       newPasswordController.clear();
       confirmNewPasswordController.clear();
       isEditing = false;
@@ -275,12 +235,8 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   void dispose() {
-    oldPasswordController.removeListener(() {});
-    newPasswordController.removeListener(() {});
-
     nameController.dispose();
     emailController.dispose();
-    oldPasswordController.dispose();
     newPasswordController.dispose();
     confirmNewPasswordController.dispose();
     super.dispose();
@@ -311,7 +267,7 @@ class _ProfileViewState extends State<ProfileView> {
                   if (isEditing) ...[
                     // Cancel button
                     ElevatedButton.icon(
-                      onPressed: _clearForm,
+                      onPressed: _resetForm,
                       label: Text(
                         'Cancel',
                         style: TextStyle(color: Colors.yellow),
@@ -355,18 +311,14 @@ class _ProfileViewState extends State<ProfileView> {
                       onPressed: _updateUserData,
                       icon: Icon(Icons.save, color: Color(0xff350f0f)),
                       label: Text(
-                        isEditing ? 'Save' : 'Edit',
+                        'Save',
                         style: TextStyle(
                           color: isEditing ? Color(0xff350f0f) : Colors.yellow,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isEditing ? Colors.yellow : Colors.transparent,
-                        side: BorderSide(
-                          color: Colors.yellow,
-                          width: isEditing ? 0 : 2,
-                        ),
+                        backgroundColor: Colors.yellow,
+                        side: BorderSide(color: Colors.yellow, width: 0),
                         elevation: 0,
                       ),
                     ),
@@ -459,6 +411,7 @@ class _ProfileViewState extends State<ProfileView> {
               TextFormField(
                 controller: emailController,
                 decoration: InputDecoration(
+                  errorText: emailError,
                   labelText: 'Email',
                   border: OutlineInputBorder(),
                   floatingLabelBehavior: FloatingLabelBehavior.always,
@@ -476,72 +429,53 @@ class _ProfileViewState extends State<ProfileView> {
                 },
               ),
               SizedBox(height: 24),
+              SizedBox(height: 24),
               TextFormField(
-                controller: oldPasswordController,
+                controller: newPasswordController,
                 decoration: InputDecoration(
-                  labelText: isEditing ? 'Old Password' : 'Password',
+                  labelText: 'New Password',
                   border: OutlineInputBorder(),
-                  hintText: isEditing ? null : '-',
                   floatingLabelBehavior: FloatingLabelBehavior.always,
-                  errorText: oldPasswordError,
+                  errorText: newPasswordError,
                 ),
                 obscureText: true,
                 enabled: isEditing,
-              ),
-              if (isEditing) ...[
-                SizedBox(height: 24),
-                TextFormField(
-                  controller: newPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'New Password',
-                    border: OutlineInputBorder(),
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    errorText: newPasswordError,
-                  ),
-                  obscureText: true,
-                  enabled: isEditing && oldPasswordController.text.isNotEmpty,
-                  validator: (value) {
-                    /**
-                     * Only validate new password if old password is filled
-                     * Check if new password is empty or less than 8 characters
-                     */
-                    if (oldPasswordController.text.isNotEmpty) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter a new password';
-                      } else if (value.length < 8) {
-                        return 'Password must be at least 8 characters long';
-                      }
+                validator: (value) {
+                  if (value != null && value.isNotEmpty) {
+                    if (value.length < 8) {
+                      return 'Password must be at least 8 characters long';
                     }
-                    return null;
-                  },
+                  }
+
+                  return null;
+                },
+              ),
+              SizedBox(height: 24),
+              TextFormField(
+                controller: confirmNewPasswordController,
+                decoration: InputDecoration(
+                  labelText: 'Confirm New Password',
+                  border: OutlineInputBorder(),
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  errorText: confirmPasswordError,
                 ),
-                SizedBox(height: 24),
-                TextFormField(
-                  controller: confirmNewPasswordController,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm New Password',
-                    border: OutlineInputBorder(),
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    errorText: confirmPasswordError,
-                  ),
-                  obscureText: true,
-                  enabled: isEditing && newPasswordController.text.isNotEmpty,
-                  validator: (value) {
-                    /**
+                obscureText: true,
+                enabled: isEditing && newPasswordController.text.isNotEmpty,
+                validator: (value) {
+                  /**
                      * Only validate confirm new password if new password is filled
                      * Check if confirm new password is empty or not equal to new password
                      */
-                    if (newPasswordController.text.isNotEmpty) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please confirm your new password';
-                      } else if (value != newPasswordController.text) {
-                        return 'Passwords do not match';
-                      }
+                  if (newPasswordController.text.isNotEmpty) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your new password';
+                    } else if (value != newPasswordController.text) {
+                      return 'Passwords do not match';
                     }
-                    return null;
-                  },
-                ),
-              ],
+                  }
+                  return null;
+                },
+              ),
             ],
           ),
         ),
