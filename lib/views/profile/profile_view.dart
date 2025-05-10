@@ -164,12 +164,14 @@ class _ProfileViewState extends State<ProfileView> {
         String newFileName =
             "${DateTime.now().millisecondsSinceEpoch}.$fileExtension";
 
-        try {
-          final slug = Uri.parse(initialProfilePictureURL!).pathSegments.last;
-          await _r2Service.deleteFile(slug);
-        } catch (e) {
-          print('Error deleting old profile picture: $e');
-          return;
+        if (initialProfilePictureURL != null) {
+          try {
+            final slug = Uri.parse(initialProfilePictureURL!).pathSegments.last;
+            await _r2Service.deleteFile(slug);
+          } catch (e) {
+            print('Error deleting old profile picture: $e');
+            return;
+          }
         }
 
         try {
@@ -211,7 +213,7 @@ class _ProfileViewState extends State<ProfileView> {
       } else {
         // Reload page
         _resetForm();
-        // fetch data
+        await _fetchUserData();
       }
     } catch (e) {
       print('Error updating user data: $e');
