@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseService {
   final CollectionReference seriesCollection = FirebaseFirestore.instance
@@ -10,8 +11,18 @@ class FirebaseService {
   /// -------------------------------------------------------------------------
   Stream<QuerySnapshot> getAllSeries() {
     try {
-      final seriesStream = scpCollection.orderBy('name').snapshots();
-      return seriesStream;
+      return seriesCollection.orderBy('name').snapshots();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<QuerySnapshot> getSeriesRecords(String seriesId) {
+    try {
+      return scpCollection
+          .where('seriesId', isEqualTo: seriesId)
+          .orderBy('itemNumber')
+          .snapshots();
     } catch (e) {
       rethrow;
     }
@@ -19,9 +30,35 @@ class FirebaseService {
 
   /// SCP Items
   /// -------------------------------------------------------------------------
+
+  Stream<QuerySnapshot> searchSCPItems(String query) {
+    try {
+      final scpStream =
+          scpCollection
+              .orderBy('title')
+              .where('title', isGreaterThanOrEqualTo: query)
+              .where('title', isLessThanOrEqualTo: '$query\uf8ff')
+              .snapshots();
+
+      return scpStream;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Stream<QuerySnapshot> getSCPItems() {
     try {
       final scpStream = scpCollection.orderBy('itemNumber').snapshots();
+      return scpStream;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Stream<QuerySnapshot> getSCPItemsLimited() {
+    try {
+      final scpStream =
+          scpCollection.orderBy('itemNumber').limit(10).snapshots();
       return scpStream;
     } catch (e) {
       rethrow;
@@ -43,10 +80,12 @@ class FirebaseService {
     return scpCollection.add({
       'itemNumber': scpItem['itemNumber'],
       'title': scpItem['title'],
+      'brief_description': scpItem['brief_description'],
       'description': scpItem['description'],
       'objectClass': scpItem['objectClass'],
       'containmentProcedures': scpItem['containmentProcedures'],
       'imageUrl': scpItem['imageUrl'],
+      'seriesId': scpItem['seriesId'],
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
@@ -58,14 +97,103 @@ class FirebaseService {
     return scpCollection.doc(itemId).update({
       'itemNumber': scpItem['itemNumber'],
       'title': scpItem['title'],
+      'brief_description': scpItem['brief_description'],
       'description': scpItem['description'],
       'objectClass': scpItem['objectClass'],
       'containmentProcedures': scpItem['containmentProcedures'],
       'imageUrl': scpItem['imageUrl'],
+      'seriesId': scpItem['seriesId'],
     });
   }
 
   Future<void> deleteSCPItem(String itemId) async {
     return scpCollection.doc(itemId).delete();
   }
+
+  // +++++ Temporary User Profile Services +++++
+  Future<void> reAuthenticateUser(String email, String password) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final credential = EmailAuthProvider.credential(
+        email: email,
+        password: password,
+      );
+      await currentUser.reauthenticateWithCredential(credential);
+    }
+  }
+
+  Future<void> updateUserName(String newUserName) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(currentUser.uid)
+          .update({'name': newUserName});
+    } else {
+      //redirect to login page or invalidate auth
+    }
+  }
+
+  Future updateUserEmail(String newEmail) async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      // Update auth email
+      await currentUser.verifyBeforeUpdateEmail(newEmail);
+      // Update Firestore profile collection email
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(currentUser.uid)
+          .update({'email': newEmail});
+    } else {
+      //redirect to login page or invalidate auth
+    }
+  }
+
+  Future<void> updateUserPassword(String newPassword) async {
+    // ensure firebase auth email change + profiles collection update
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      await currentUser.updatePassword(newPassword);
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(currentUser.uid)
+          .update({'password': newPassword});
+    } else {
+      //redirect to login page
+    }
+  }
+
+  Future<String?> getUserProfilePictureURL(String userId) async {
+    final doc =
+        await FirebaseFirestore.instance
+            .collection('profiles')
+            .doc(userId)
+            .get();
+    return doc.data()?['profilePictureURL'] as String?;
+  }
+
+  Future<String> updateUserProfilePictureURL(
+    String userId,
+    String imageUrl,
+  ) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('profiles')
+          .doc(userId)
+          .update({'profilePictureURL': imageUrl});
+      return 'Profile picture URL updated successfully';
+    } catch (e) {
+      print('Error updating profile picture URL: $e');
+      return 'Error updating profile picture URL';
+      // throw 'Failed to update profile picture URL';
+    }
+  }
+
+  Future<void> deleteUserProfilePictureURL(String userId) async {
+    return FirebaseFirestore.instance.collection('profiles').doc(userId).update(
+      {'profilePictureURL': null},
+    );
+  }
+
+  // ----- Temporary User Profile Services -----
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../services/firebase_service.dart';
 
@@ -13,38 +14,28 @@ class _RecentSCPState extends State<RecentSCP> {
   final FirebaseService _firebaseService = FirebaseService();
 
   Image objectClassIcon(String type) {
-    Image icon =
-    Image.asset(
-      'assets/images/safe-class.png',
-      width: 40,
-      height: 40,
-    );
-
-    switch (type) {
-      case 'safe':
-        icon = Image.asset(
-          'assets/images/safe-class.png',
-          width: 40,
-          height: 40,
-        );
-        break;
-      case 'euclid':
-        icon = Image.asset(
-          'assets/images/euclid-class.png',
-          width: 40,
-          height: 40,
-        );
-        break;
-      case 'keter':
-        icon = Image.asset(
-          'assets/images/keter-class.png',
-          width: 40,
-          height: 40,
-        );
-        break;
-    }
-
-    return icon;
+    return switch (type) {
+      'safe' => Image.asset(
+        'assets/images/safe-class.png',
+        width: 40,
+        height: 40,
+      ),
+      'euclid' => Image.asset(
+        'assets/images/euclid-class.png',
+        width: 40,
+        height: 40,
+      ),
+      'keter' => Image.asset(
+        'assets/images/keter-class.png',
+        width: 40,
+        height: 40,
+      ),
+      _ => Image.asset(
+        'assets/images/safe-class.png',
+        width: 40,
+        height: 40,
+      ) // TODO: Replace with unknown category
+    };
   }
 
   @override
@@ -82,12 +73,14 @@ class _RecentSCPState extends State<RecentSCP> {
                     shrinkWrap: true,
                     itemCount: scpItems.length,
                     itemBuilder: (context, index) {
-                      // final docId = scpItems[index].id;
+                      final docId = scpItems[index].id;
                       final data = scpItems[index].data() as Map<String, dynamic>;
 
                       return Card(
                         child: InkWell(
-                            onTap: () {},
+                            onTap: () {
+                              context.go('/directory/${data['seriesId']}/$docId');
+                            },
                             customBorder: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8)
                             ),
@@ -112,7 +105,7 @@ class _RecentSCPState extends State<RecentSCP> {
                                         Align(
                                             alignment: Alignment.centerLeft,
                                             child: Text(
-                                              data['description'],
+                                              data['brief_description'],
                                               overflow: TextOverflow.ellipsis,
                                               maxLines: 2,
                                             )

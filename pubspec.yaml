@@ -2,7 +2,7 @@ name: crud_app
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -43,6 +43,12 @@ dependencies:
   go_router:
   firebase_auth: ^5.5.2
   flutter_bloc: ^9.1.0
+  fleather: ^1.22.0
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+  cloudflare_r2: ^0.0.11
+  flutter_dotenv: ^5.2.1
+  mime: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -60,7 +66,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.
@@ -71,6 +76,8 @@ flutter:
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   assets:
+    - .env
+    - assets/images/profile_placeholder.jpg
     - assets/images/what.gif
     - assets/images/what.webp
     - assets/images/scp-logo.png
