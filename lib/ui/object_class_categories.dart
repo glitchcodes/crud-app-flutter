@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class ObjectClassCategories extends StatelessWidget {
   ObjectClassCategories({super.key});
@@ -33,7 +34,9 @@ class ObjectClassCategories extends StatelessWidget {
 
                   return Card(
                       child: InkWell(
-                        onTap: () {},
+                        onTap: () {
+                          context.go('/directory/object-class/${item['label']}');
+                        },
                         customBorder: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8)
                         ),

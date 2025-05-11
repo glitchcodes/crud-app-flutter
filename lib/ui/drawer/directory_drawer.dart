@@ -15,8 +15,7 @@ class DirectoryDrawer extends StatelessWidget {
   static const Map<String, int> routeToIndex = {
     '/directory/contribute': 0,
     '/directory': 1,
-    '/directory/bookmarks': 2,
-    '/directory/search': 3,
+    '/directory/search': 2,
   };
 
   static int getSelectedIndex(String route) {
@@ -72,11 +71,6 @@ class DirectoryDrawer extends StatelessWidget {
               icon: Icon(Icons.book_outlined),
               selectedIcon: Icon(Icons.book_rounded),
               label: Text('Series')
-          ),
-          NavigationDrawerDestination(
-              icon: Icon(Icons.bookmark_outline),
-              selectedIcon: Icon(Icons.bookmark_rounded),
-              label: Text('Bookmarks')
           ),
           NavigationDrawerDestination(
               icon: Icon(Icons.search_outlined),

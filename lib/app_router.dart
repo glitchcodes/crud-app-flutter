@@ -6,6 +6,7 @@ import 'package:crud_app/util/page_transitions.dart';
 import 'package:crud_app/views/auth/login_view.dart';
 import 'package:crud_app/views/auth/register_view.dart';
 import 'package:crud_app/views/directory/item_view.dart';
+import 'package:crud_app/views/directory/object_class_view.dart';
 import 'package:crud_app/views/directory/records_view.dart';
 import 'package:crud_app/views/directory/search_view.dart';
 import 'package:crud_app/views/directory/series_view.dart';
@@ -139,6 +140,13 @@ class AppRouter {
                       path: '/directory',
                       builder: (context, state) => const SeriesView(),
                       routes: [
+                        GoRoute(
+                          path: '/object-class/:objectClass',
+                          builder: (context, state) {
+                            final objectClass = state.pathParameters['objectClass'];
+                            return ObjectClassView(objectClass: objectClass!);
+                          },
+                        ),
                         GoRoute(
                           name: 'search_scp',
                           path: '/search',

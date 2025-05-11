@@ -51,8 +51,7 @@ class _DirectoryScreenState extends State<DirectoryScreen> {
     (switch (index) {
       0 => context.go('/directory/contribute'),
       1 => context.go('/directory'),
-      2 => context.go('/directory/bookmarks'),
-      3 => context.go('/directory/search'),
+      2 => context.go('/directory/search'),
       _ => context.go('/directory'),
     });
   }
