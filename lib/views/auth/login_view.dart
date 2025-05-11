@@ -164,34 +164,6 @@ class _LoginFormState extends State<LoginForm> {
                   return null;
                 },
               ),
-              SizedBox(height: 16),
-              Row(
-                  children: <Widget>[
-                    SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          onChanged: (value) {
-                            setState(() {
-                              _rememberMe = value!;
-                            });
-                          },
-                        )
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(left: 8),
-                      child: Text('Remember Me'),
-                    ),
-                    Spacer(),
-                    TextButton(
-                      onPressed: () {
-                        // Add forgot password functionality
-                      },
-                      child: Text('Forgot Password?'),
-                    ),
-                  ]
-              ),
               SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
