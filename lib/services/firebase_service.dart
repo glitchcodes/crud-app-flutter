@@ -138,7 +138,8 @@ class FirebaseService {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
       // Update auth email
-      await currentUser.verifyBeforeUpdateEmail(newEmail);
+      // ignore: deprecated_member_use
+      await currentUser.updateEmail(newEmail);
       // Update Firestore profile collection email
       await FirebaseFirestore.instance
           .collection('profiles')
@@ -163,7 +164,7 @@ class FirebaseService {
     }
   }
 
-  Future<String?> getUserProfilePictureURL(String userId) async {
+  Future<String?> getUserProfilePictureUrl(String userId) async {
     final doc =
         await FirebaseFirestore.instance
             .collection('profiles')
@@ -172,7 +173,7 @@ class FirebaseService {
     return doc.data()?['profilePictureURL'] as String?;
   }
 
-  Future<String> updateUserProfilePictureURL(
+  Future<String> updateUserProfilePictureUrl(
     String userId,
     String imageUrl,
   ) async {
@@ -189,7 +190,7 @@ class FirebaseService {
     }
   }
 
-  Future<void> deleteUserProfilePictureURL(String userId) async {
+  Future<void> deleteUserProfilePictureUrl(String userId) async {
     return FirebaseFirestore.instance.collection('profiles').doc(userId).update(
       {'profilePictureURL': null},
     );

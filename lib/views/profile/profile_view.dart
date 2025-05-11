@@ -1,9 +1,11 @@
+// joseph start
 import 'dart:io';
 import 'package:crud_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:crud_app/features/auth/presentation/bloc/auth_event.dart';
 import 'package:crud_app/services/firebase_service.dart';
 import 'package:crud_app/services/r2_service.dart';
 import 'package:crud_app/ui/typography/text_heading.dart';
+import 'package:crud_app/util/toast_helper.dart';
 import 'package:crud_app/views/profile/reauth_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +22,7 @@ class _ProfileViewState extends State<ProfileView> {
   final FirebaseService _firebaseService = FirebaseService();
   final R2Service _r2Service = R2Service(bucketName: 'scp-app');
 
+  String? loadingText;
   bool isLoading = false;
   bool isEditing = false;
 
@@ -69,7 +72,7 @@ class _ProfileViewState extends State<ProfileView> {
         // Populate the controllers with user details
         userId = currentUser.uid;
         initialProfilePictureURL = await _firebaseService
-            .getUserProfilePictureURL(userId!); // Set the profile picture URL
+            .getUserProfilePictureUrl(userId!); // Set the profile picture URL
         print('Initial Profile Picture URL: $initialProfilePictureURL');
         nameController.text = currentUser.name ?? '';
         initialName = currentUser.name;
@@ -106,6 +109,11 @@ class _ProfileViewState extends State<ProfileView> {
       return;
     }
 
+    setState(() {
+      loadingText = 'Updating...';
+      isLoading = true;
+    });
+
     final bool requireReauth =
         newPasswordController.text.isNotEmpty ||
         confirmNewPasswordController.text.isNotEmpty ||
@@ -115,22 +123,27 @@ class _ProfileViewState extends State<ProfileView> {
       if (requireReauth) {
         final bool reauthResult = await showReauthDialog(context);
         if (!reauthResult) {
-          // if (mounted) {
-          //   showToast(context, 'Please reauthenticate to proceed');
-          // }
-          if (initialEmail != emailController.text) {
-            // Email changed, show error
-            setState(() {
-              emailError = 'Please save again to reauthenticate.';
-            });
+          if (mounted) {
+            showToast(context, 'Requested operation requires reauthentication');
           }
-          return; // User did not reauthenticate
+          setState(() {
+            isLoading = false;
+          });
+          return; // Cancel further processing
         } else {
           // Reauthentication successful
           // update email and/or password
           if (emailController.text != initialEmail) {
-            await _firebaseService.updateUserEmail(emailController.text);
-            print('Email updated.');
+            try {
+              await _firebaseService.updateUserEmail(emailController.text);
+            } catch (e) {
+              showToast(
+                context,
+                'Failed to update email',
+                variant: ToastVariant.failed,
+              );
+              print('Error updating email: $e');
+            }
             setState(() {
               emailError = null;
             });
@@ -144,16 +157,23 @@ class _ProfileViewState extends State<ProfileView> {
               });
               return;
             } else {
-              await _firebaseService.updateUserPassword(
-                newPasswordController.text,
-              );
-              print('Password updated.');
+              try {
+                await _firebaseService.updateUserPassword(
+                  newPasswordController.text,
+                );
+              } catch (e) {
+                showToast(
+                  context,
+                  'Failed to update password',
+                  variant: ToastVariant.failed,
+                );
+              }
+
               setState(() {
                 confirmPasswordError = null;
               });
             }
           }
-          print('Reauthentication successful. Implementing changes...');
         }
       }
 
@@ -169,52 +189,72 @@ class _ProfileViewState extends State<ProfileView> {
             final slug = Uri.parse(initialProfilePictureURL!).pathSegments.last;
             await _r2Service.deleteFile(slug);
           } catch (e) {
-            print('Error deleting old profile picture: $e');
+            showToast(
+              context,
+              'Failed to delete old profile picture',
+              variant: ToastVariant.failed,
+            );
             return;
           }
         }
 
         try {
           File file = File(newProfileImagePath!);
-          await _firebaseService.deleteUserProfilePictureURL(userId!);
+          await _firebaseService.deleteUserProfilePictureUrl(userId!);
           final uploadedFileURL = await _r2Service.uploadFile(
             file,
             newFileName,
           );
 
           if (uploadedFileURL != null) {
-            print('Profile picture uploaded: $uploadedFileURL');
-            await _firebaseService.updateUserProfilePictureURL(
+            await _firebaseService.updateUserProfilePictureUrl(
               userId!,
-
-              // get current user password
               uploadedFileURL,
             );
-            print("Profile picture URL updated in database: $uploadedFileURL");
           } else {
-            print('Failed to upload profile picture.');
+            showToast(
+              context,
+              'Failed to update profile picture',
+              variant: ToastVariant.failed,
+            );
           }
         } catch (e) {
-          print('Error uploading profile picture: $e');
+          showToast(
+            context,
+            'Failed to update profile picture',
+            variant: ToastVariant.failed,
+          );
         }
       }
 
       // Update name
       if (nameController.text != initialName) {
-        await _firebaseService.updateUserName(nameController.text);
-        print('Name updated.');
+        try {
+          await _firebaseService.updateUserName(nameController.text);
+        } catch (e) {
+          showToast(
+            context,
+            'Failed to update name',
+            variant: ToastVariant.failed,
+          );
+        }
       }
 
-      // Only reload page when name and profile pic is updated but logout user when auth is required
+      setState(() {
+        loadingText = null;
+        isLoading = false;
+      });
+
       if (requireReauth) {
-        // Logout user
-        context.read<AuthBloc>().add(LogoutEvent());
-        print('User logged out.');
-      } else {
-        // Reload page
-        _resetForm();
-        await _fetchUserData();
+        await currentUser?.reload();
       }
+      await _fetchUserData();
+      _resetForm();
+      showToast(
+        context,
+        'Profile updated successfully',
+        variant: ToastVariant.success,
+      );
     } catch (e) {
       print('Error updating user data: $e');
       ScaffoldMessenger.of(
@@ -228,7 +268,6 @@ class _ProfileViewState extends State<ProfileView> {
       newProfileImagePath = null;
       nameController.text = initialName ?? '';
       emailController.text = initialEmail ?? '';
-      // oldPasswordController.clear();
       newPasswordController.clear();
       confirmNewPasswordController.clear();
       isEditing = false;
@@ -247,7 +286,18 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(),
+            if (loadingText != null) ...[
+              SizedBox(height: 16),
+              Text(loadingText!),
+            ],
+          ],
+        ),
+      );
     }
 
     return SingleChildScrollView(
