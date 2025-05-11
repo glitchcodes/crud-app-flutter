@@ -65,6 +65,19 @@ class FirebaseService {
     }
   }
 
+  Stream<QuerySnapshot> getSCPItemsByClass(String objectClass) {
+    try {
+      final scpStream = scpCollection
+          .where('objectClass', isEqualTo: objectClass)
+          .orderBy('itemNumber')
+          .snapshots();
+
+      return scpStream;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Stream<QuerySnapshot> getRecentSCPItems() {
     try {
       final scpStream = scpCollection.orderBy('createdAt').limit(3).snapshots();
