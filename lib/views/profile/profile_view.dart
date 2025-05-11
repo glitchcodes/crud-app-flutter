@@ -221,7 +221,7 @@ class _ProfileViewState extends State<ProfileView> {
         } catch (e) {
           showToast(
             context,
-            'Failed to update profile picture',
+            'Picture upload failed. Please try again later.',
             variant: ToastVariant.failed,
           );
         }
